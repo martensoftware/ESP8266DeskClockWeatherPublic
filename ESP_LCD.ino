@@ -5,6 +5,8 @@
 #include <WiFiUdp.h>
 #include <WiFiClient.h>
 #include <ArduinoJson.h>
+#include <Time.h>
+#include <TimeLib.h>
 
 ESP8266WiFiMulti wifiMulti;
 
@@ -27,6 +29,8 @@ int status = WL_IDLE_STATUS;
 
 String jsonResponse;
 String currentTemp, weatherCondition, windDir, windSpeed;
+String date;
+time_t utcCalc;
 
 unsigned long lastConnectionTime = 1 * 60 * 1000;     // last time you connected to the server, in milliseconds
 const unsigned long postInterval = 1 * 60 * 1000;  // posting interval of 10 minutes  (10L * 1000L; 10 seconds delay for testing)
@@ -131,6 +135,7 @@ void displayTime() {
     timeUNIX = time;
     Serial.print("NTP response:\t");
     Serial.println(timeUNIX);
+    date = getDate(timeUNIX);
     lastNTPResponse = currentMillis;
   } else if ((currentMillis - lastNTPResponse) > 3600000) {
     Serial.println("More than 1 hour since last NTP response. Rebooting.");
@@ -168,8 +173,6 @@ void displayTime() {
       secondsStr = "0" + (String)seconds;
     else
       secondsStr = seconds;
-    
-    String date = getDate((time_t)timeUNIX);
 
     lcd.clear();
     lcd.setCursor(0,0);
@@ -197,6 +200,7 @@ uint32_t getTime() {
   // Convert NTP time to a UNIX timestamp:
   // Unix time starts on Jan 1 1970. That's 2208988800 seconds in NTP time:
   const uint32_t seventyYears = 2208988800UL;
+  utcCalc = NTPTime - seventyYears;
   // subtract seventy years:
   uint32_t UNIXTime = NTPTime - seventyYears;
   return UNIXTime;
@@ -225,13 +229,10 @@ inline int getHours(uint32_t UNIXTime) {
 }
 
 inline String getDate(time_t UNIXTime) {
-  char buffer [80];
-  struct tm * timeinfo;
-  time (&UNIXTime);
-  timeinfo = localtime (&UNIXTime);
-  
-  strftime(buffer, 80, "%x",timeinfo);
-  return buffer;
+  Serial.println( day(utcCalc));
+
+  String s = (String)month(utcCalc) + "/" + (String)day(utcCalc) + "/" + (String)year(utcCalc);
+  return s;
 }
 
 void getWeather(){
