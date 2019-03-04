@@ -168,11 +168,13 @@ void displayTime() {
       secondsStr = "0" + (String)seconds;
     else
       secondsStr = seconds;
+    
+    String date = getDate((time_t)timeUNIX);
 
     lcd.clear();
-    lcd.setCursor(2,0);
-    lcd.print("current time");
-    lcd.setCursor(4,1);
+    lcd.setCursor(0,0);
+    lcd.print(date);
+    lcd.setCursor(8,1);
     lcd.print(hoursStr + ":" + minutesStr + ":" + secondsStr);
   } 
 }
@@ -220,6 +222,16 @@ inline int getMinutes(uint32_t UNIXTime) {
 
 inline int getHours(uint32_t UNIXTime) {
   return UNIXTime / 3600 % 24;
+}
+
+inline String getDate(time_t UNIXTime) {
+  char buffer [80];
+  struct tm * timeinfo;
+  time (&UNIXTime);
+  timeinfo = localtime (&UNIXTime);
+  
+  strftime(buffer, 80, "%x",timeinfo);
+  return buffer;
 }
 
 void getWeather(){
